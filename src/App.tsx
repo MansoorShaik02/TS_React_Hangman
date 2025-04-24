@@ -24,15 +24,14 @@ function App() {
   const addGuessedLetter = useCallback(
     (letter: string) => {
       if (guessedLetters.includes(letter) || isLoser || isWinner) return;
-
-      setGuessedLetters((currentLetters) => [...currentLetters, letter]);
+      setGuessedLetters((current) => [...current, letter]);
     },
-    [guessedLetters, isWinner, isLoser]
+    [guessedLetters, isLoser, isWinner]
   );
 
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {
-      const key = e.key;
+      const key = e.key.toLowerCase();
       if (!key.match(/^[a-z]$/)) return;
 
       e.preventDefault();
@@ -40,16 +39,12 @@ function App() {
     };
 
     document.addEventListener("keypress", handler);
-
-    return () => {
-      document.removeEventListener("keypress", handler);
-    };
+    return () => document.removeEventListener("keypress", handler);
   }, [guessedLetters]);
 
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {
-      const key = e.key;
-      if (key !== "Enter") return;
+      if (e.key !== "Enter") return;
 
       e.preventDefault();
       setGuessedLetters([]);
@@ -57,42 +52,55 @@ function App() {
     };
 
     document.addEventListener("keypress", handler);
-
-    return () => {
-      document.removeEventListener("keypress", handler);
-    };
+    return () => document.removeEventListener("keypress", handler);
   }, []);
 
   return (
-    <div
-      style={{
-        maxWidth: "800px",
-        display: "flex",
-        flexDirection: "column",
-        gap: "2rem",
-        margin: "0 auto",
-        alignItems: "center",
-      }}
-    >
-      <div style={{ fontSize: "2rem", textAlign: "center" }}>
-        {isWinner && "Winner! - Refresh to try again"}
-        {isLoser && "Nice Try - Refresh to try again"}
-      </div>
-      <HangmanDrawing numberOfGuesses={incorrectLetters.length} />
-      <HangmanWord
-        reveal={isLoser}
-        guessedLetters={guessedLetters}
-        wordToGuess={wordToGuess}
-      />
-      <div style={{ alignSelf: "stretch" }}>
-        <Keyboard
-          disabled={isWinner || isLoser}
-          activeLetters={guessedLetters.filter((letter) =>
-            wordToGuess.includes(letter)
-          )}
-          inactiveLetters={incorrectLetters}
-          addGuessedLetter={addGuessedLetter}
+    <div className="min-h-screen bg-gradient-to-br from-rose-100 via-blue-100 to-purple-100 flex items-center justify-center px-4">
+      <div className="max-w-5xl w-full flex flex-col items-center gap-6 bg-white rounded-2xl shadow-2xl p-0 md:p-10">
+        <h1
+          className={`text-xl sm:text-2xl md:text-3xl font-bold text-center ${
+            isWinner
+              ? "text-green-600 animate-bounce"
+              : isLoser
+              ? "text-red-600 animate-pulse"
+              : "text-gray-700"
+          }`}
+        >
+          {isWinner && "🎉 You Won! Press Enter or Tap New Game"}
+          {isLoser && "💀 Game Over! Press Enter or Tap New Game"}
+        </h1>
+
+        <div className="w-full max-w-md sm:max-w-lg md:max-w-xl relative">
+          <HangmanDrawing numberOfGuesses={incorrectLetters.length} />
+        </div>
+
+        <HangmanWord
+          reveal={isLoser}
+          guessedLetters={guessedLetters}
+          wordToGuess={wordToGuess}
         />
+
+        <div className="w-full">
+          <Keyboard
+            disabled={isWinner || isLoser}
+            activeLetters={guessedLetters.filter((l) =>
+              wordToGuess.includes(l)
+            )}
+            inactiveLetters={incorrectLetters}
+            addGuessedLetter={addGuessedLetter}
+          />
+        </div>
+
+        <button
+          onClick={() => {
+            setGuessedLetters([]);
+            setWordToGuess(getWord());
+          }}
+          className="mt-0 px-6 py-2 rounded-lg bg-indigo-500 hover:bg-indigo-600 text-white font-semibold shadow-md transition-all duration-200"
+        >
+          🔁 New Game
+        </button>
       </div>
     </div>
   );
